@@ -23,6 +23,7 @@ static bool isAnimate = 0;
 
 static float spotAngle = 25.0; // Spotlight cone half-angle.
 static float xMove = 0.0, zMove = 0.0; // Movement components.
+static float xRot = 0.0, yRot = 180.0; // Rotation components.
 static float spotExponent = 10.0; // Spotlight exponent = attenuation.
 
 static int redUp = 1;
@@ -50,6 +51,7 @@ static int game_user_ans = -1;
 static int game_num_correct = 0;
 static int game_num_total = 10;
 static int game_num_round = 0;
+static int game_level = 1;
 static bool game_on = false;
 
 static float colors[] = {
@@ -188,6 +190,26 @@ bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, 
     return true;
 }
 
+void loadTextureFromPng(char* filename)
+{
+	int width, height;
+	bool hasAlpha;
+	bool success = loadPngImage(filename, width, height, hasAlpha, &textureImage);
+	if (!success) {
+	    std::cout << "Unable to load png file" << std::endl;
+	    return;
+	}
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
+                height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
+                textureImage);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+}
+
 // Routine to draw a bitmap character string.
 void writeBitmapString(void *font, char *string)
 {  
@@ -244,7 +266,10 @@ void rungame(int value)
 			cout<<"Percent Correct: "<< percentCorrect <<endl;
                         if (percentCorrect >= 80 && game_guess_time > 150)
                         {
-                            game_guess_time -= 100;
+                            game_level += 1;
+                            char pngFile[9];
+                            sprintf(pngFile,"lvl%d.png",game_level);
+                            loadTextureFromPng(pngFile);
 	        	}
 			resetGame();
 		}
@@ -252,7 +277,7 @@ void rungame(int value)
 	else
 		true;
 	
-	glutTimerFunc(game_guess_time,rungame,1);
+	glutTimerFunc(max(game_guess_time-(game_level-1)*100,150),rungame,1);
 	glutPostRedisplay();
 }
 
@@ -327,6 +352,8 @@ void floatToString(char * destStr, int precision, float val)
    destStr[precision] = '\0';
 }
 
+
+
 // Initialization routine.
 void setup(void)
 {
@@ -336,14 +363,8 @@ void setup(void)
 
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	int width, height;
-	bool hasAlpha;
-	char filename[] = "logo.png";
-	bool success = loadPngImage(filename, width, height, hasAlpha, &textureImage);
-	if (!success) {
-	    std::cout << "Unable to load png file" << std::endl;
-	    return;
-	}
+        char pngFile[] = "lvl1.png";
+        loadTextureFromPng(pngFile);
 
 	// Turn on OpenGL lighting.
 	glEnable(GL_LIGHTING);
@@ -500,6 +521,30 @@ void draw3GameBalls()
 	glPopMatrix();
 }
 
+void drawLevelScreen()
+{
+        glPushMatrix();
+	glTranslatef(1.0, 2.5, -3.6);
+	glRotatef(yRot, 0,1,0);
+	glRotatef(xRot, 1,0,0);
+
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(-2.0, -1.0, 0.0);
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(-2.0, 1.0, 0.0);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(0.0, 1.0, 0.0);
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(0.0, -1.0, 0.0);
+
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+        glPopMatrix();
+}
+
 void writeMessageToScreen()
 {
 	glDisable(GL_LIGHTING);
@@ -613,6 +658,9 @@ void drawScene()
 	glFogfv (GL_FOG_COLOR, fogColor); //set the fog color to our color chosen above
 	glFogf (GL_FOG_DENSITY, global_fog_density); //set the density to the value above
 
+        //Draw the quad
+        drawLevelScreen();
+
 	glutSwapBuffers();
 }
 
@@ -632,32 +680,36 @@ void keyInput(unsigned char key, int x, int y)
 {
    switch (key) 
    {
-      case 27:
-         exit(0);
-         break;
-	  case 't':
- 		 if (spotExponent > 0.0) spotExponent -= 0.1;
-         glutPostRedisplay();
-		 break;
-	  case 'a':
-	     isAnimate = !isAnimate;
-		 glutPostRedisplay();
-		 break;
-	  case 'T':
- 		 spotExponent += 0.1;
-         glutPostRedisplay();
-		 break;
-      case '1':
-         game_user_ans = 0;
-         break;
-      case '2':
-      	 game_user_ans = 1;
-      	 break;
-      case '3':
-      	 game_user_ans = 2;
-      	 break; 
-      default:
-         break;
+	   case 27:
+		   exit(0);
+		   break;
+	   case 't':
+		   if (spotExponent > 0.0) spotExponent -= 0.1;
+		   glutPostRedisplay();
+		   break;
+	   case ' ':
+                   game_on = !game_on;
+                   game_user_ans = -1;
+		   break;
+	   case 'a':
+		   isAnimate = !isAnimate;
+		   glutPostRedisplay();
+		   break;
+	   case 'T':
+		   spotExponent += 0.1;
+		   glutPostRedisplay();
+		   break;
+	   case '1':
+		   game_user_ans = 0;
+		   break;
+	   case '2':
+		   game_user_ans = 1;
+		   break;
+	   case '3':
+		   game_user_ans = 2;
+		   break; 
+	   default:
+		   break;
    }
 }
 
@@ -675,19 +727,23 @@ void specialKeyInput(int key, int x, int y)
    }
    if (key == GLUT_KEY_UP)
    {
-      if (zMove > -4.0) zMove -= 0.1;
+      if (yRot < 360.0) yRot += 10.0;
+      cout << "Y Rotation:" << yRot << endl;
    }
    if (key == GLUT_KEY_DOWN)
    {
-      if (zMove < 4.0) zMove += 0.1;
+      if (yRot > 0.0) yRot -= 10.0;
+      cout << "Y Rotation:" << yRot << endl;
    }
    if (key == GLUT_KEY_LEFT)
    {
-      if (xMove > -4.0) xMove -= 0.1;
+      if (xRot < 360.0) xRot += 10.0;
+      cout << "X Rotation:" << xRot << endl;
    }
    if (key == GLUT_KEY_RIGHT)
    {
-      if (xMove < 4.0) xMove += 0.1;
+      if (xRot > 0.0) xRot -= 10.0;
+      cout << "X Rotation:" << xRot << endl;
    }
    glutPostRedisplay();
 }
