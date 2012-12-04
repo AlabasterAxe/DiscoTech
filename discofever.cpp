@@ -215,6 +215,65 @@ void setup(void)
 	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 }
 
+void drawDanceFloor()
+{
+	glPopMatrix();
+	// Draw 10 x 10 array of multi-colored spheres.
+	int i,j;
+	for (i = 0; i < 50; i++)
+	{
+		for (j = 0; j < 50; j++)
+		{
+			glPushMatrix();
+			glTranslatef(-20.0+i, 0.0, -20.0+j);
+
+			// Ambient and diffuse colors of the spheres specified to alternate.
+			if ((i+j)%3 == 0) { 
+				glColor4f(redIntensity, 0.0, 0.0, 1.0);
+			}
+			else if ((i+j)%3 == 1) {
+				glColor4f(0.0, greenIntensity, 0.0, 1.0);
+			}
+			else {
+				glColor4f(0.0, 0.0, blueIntensity, 1.0);
+			}
+			//int randomColor = 3*(rand()%7);
+			//glColor4f(colors[randomColor], colors[randomColor+1], colors[randomColor+2], 1.0);
+
+			glShadeModel(GL_SMOOTH);
+
+			glutSolidCube(1.0);
+			glPopMatrix(); 
+		}
+	}
+	glPushMatrix();
+}
+
+void drawDiscoStick()
+{
+	glPushMatrix();
+	glColor3f(0.0, 0.0, 0.0);
+	glTranslatef(0.0,2.5,-4.0);
+	for(int  i = 0; i <20; i++)
+	{
+		glTranslatef(0.0,.3,0.0);
+		glutSolidCube(.3);
+	}
+	glPopMatrix();
+}
+
+void writeMessageToScreen()
+{
+	glDisable(GL_LIGHTING);
+	glColor3f(1.0, 1.0, 1.0);
+	floatToString(theStringBuffer, 4, spotExponent);
+	glRasterPos3f(-1.0, 1.0, -2.0);
+	char theUpperMessage[] = "Dance Untill the World Ends, Bitch!";
+	writeBitmapString((void*)font, theUpperMessage);  
+	//writeBitmapString((void*)font, theStringBuffer);
+	glEnable(GL_LIGHTING);
+}
+
 // Drawing routine.
 void drawScene()
 {
@@ -231,15 +290,7 @@ void drawScene()
 	float matSpec[] = { 1.0, 1.0, 1.0, 1.0 };
 	float matShine[] = { 40.0 };
 
-	// Write message.
-	glDisable(GL_LIGHTING);
-	glColor3f(1.0, 1.0, 1.0);
-	floatToString(theStringBuffer, 4, spotExponent);
-	glRasterPos3f(-1.0, 1.0, -2.0);
-	char theUpperMessage[] = "Dance Untill the World Ends";
-	writeBitmapString((void*)font, theUpperMessage);  
-	writeBitmapString((void*)font, theStringBuffer);
-	glEnable(GL_LIGHTING);
+	writeMessageToScreen();
 
 	gluLookAt (xMove/2.5, 3.0, 5.0+zMove/2.5, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0);
 
@@ -271,15 +322,6 @@ void drawScene()
 	xMove = 2*(2 + cos(2 * spotLightParameter-90))*sin(3 * spotLightParameter-90);
 	glTranslatef(xMove, 0.0, zMove); // Move the spotlight.
 
-	// Draw the spotlight cone in wireframe after disabling lighting
-	glPushMatrix();
-	glDisable(GL_LIGHTING);
-	glRotatef(-90.0, 1.0, 0.0, 0.0);
-	glColor3f(1.0, 1.0, 1.0);
-	//glutWireCone(3.0 * tan( spotAngle/180.0 * PI ), 3.0, 20, 20);
-	glEnable(GL_LIGHTING);
-	glPopMatrix();
-
 	// Spotlight properties including position.
 	glLightfv(GL_LIGHT2, GL_POSITION, lightPos);  
 	glLightf(GL_LIGHT2, GL_SPOT_CUTOFF, spotAngle);
@@ -294,58 +336,20 @@ void drawScene()
 	xMove = 2*(2 + cos(1 * spotLightParameter-90))*sin(1 * spotLightParameter-90);
 	glTranslatef(xMove, 0.0, zMove); // Move the spotlight.
 
-	// Draw the spotlight cone in wireframe after disabling lighting
-	glPushMatrix();
-	glDisable(GL_LIGHTING);
-	glRotatef(-90.0, 1.0, 0.0, 0.0);
-	glColor3f(1.0, 1.0, 1.0);
-	//glutWireCone(3.0 * tan( spotAngle/180.0 * PI ), 3.0, 20, 20);
-	glEnable(GL_LIGHTING);
-	glPopMatrix();
-
-	// Spotlight properties including position.
+    // Spotlight properties including position.
 	glLightfv(GL_LIGHT1, GL_POSITION, lightPos);  
 	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, spotAngle);
 	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spotDirection);    
 	glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, spotExponent);
 
-	glPopMatrix();
-
-	// Draw 10 x 10 array of multi-colored spheres.
-	int i,j;
-	for (i = 0; i < 50; i++)
-		for (j = 0; j < 50; j++)
-		{
-			glPushMatrix();
-			glTranslatef(-20.0+i, 0.0, -20.0+j);
-
-			// Ambient and diffuse colors of the spheres specified to alternate.
-			if ((i+j)%3 == 0) { 
-				glColor4f(redIntensity, 0.0, 0.0, 1.0);
-			}
-			else if ((i+j)%3 == 1) {
-				glColor4f(0.0, greenIntensity, 0.0, 1.0);
-			}
-			else {
-				glColor4f(0.0, 0.0, blueIntensity, 1.0);
-			}
-			//int randomColor = 3*(rand()%7);
-			//glColor4f(colors[randomColor], colors[randomColor+1], colors[randomColor+2], 1.0);
-
-			glShadeModel(GL_SMOOTH);
-
-			glutSolidCube(1.0);
-			glPopMatrix(); 
-		}
-
-	glPushMatrix();
-
+	//Draws the raving dance floor
+	drawDanceFloor();
+	
+	//Draws the Discoball
 	glColor4f(1.0, 1.0, 1.0, 1.0);
-
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matAmbAndDif1);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, matShine);
-
 	glShadeModel(GL_FLAT);
 	glTranslatef(0.,3.,-4.0);
 	glRotatef(90,1.0,0.0,0.0);
@@ -353,14 +357,18 @@ void drawScene()
 	glutSolidSphere(0.75,20,20);
 	glPopMatrix();
 
+	//Draws the Discoball's pole
+	drawDiscoStick();
+	
+    //Draws Back Wall
     glPushMatrix();
 	glColor3f(0.5, 0.35, .05);
 	glTranslatef(0.,0.,-35);
 	glutSolidCube(50);
 	glPopMatrix();
 
+	//Draws the dynamic fog
     float fogColor[4] = {redIntensity, greenIntensity, blueIntensity,1};
-
 	glFogfv (GL_FOG_COLOR, fogColor); //set the fog color to our color chosen above
 	glFogf (GL_FOG_DENSITY, global_fog_density); //set the density to the value above
 
@@ -437,6 +445,7 @@ void specialKeyInput(int key, int x, int y)
 void rightMenu(int id)
 {
    if (id==0) exit(0);
+   if (id==1) isAnimate = !isAnimate;
 }
 
 // Function to create menu.
@@ -451,6 +460,7 @@ void makeMenu(void)
 */   
 
    glutCreateMenu(rightMenu);
+   glutAddMenuEntry("Toggle Animation",1);
    glutAddMenuEntry("Quit",0);
    glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -459,11 +469,12 @@ void makeMenu(void)
 void printInteraction(void)
 {
    cout << "Interaction:" << endl;
-   cout << "No interactions!" << endl;
+   cout << "Press a to start the party" << endl;
+   cout << "Right click to access the MENU" <<endl;
 }
 
 // Main routine.
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
    printInteraction();
    glutInit(&argc, argv);
