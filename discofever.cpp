@@ -1,16 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////////////        
-// spotlight.cpp
+// discofever.cpp
 //
-// This program draws an array of spheres lit by a spotlight whose cone angle can be
-// changed and which can be moved as well. The spotlight cone is shown by a wireframe.
-// The spheres are colored using color material mode.
+// Written by Dan, Matt, and Tianyi
 //
-// Interaction:
-// Press the page up/down keys to increase/decrease the spotlight cone angle.
-// Press the arrow keys to move the spotlight.
-// Press 't/T' to decrease/increase the spotlight's attenuation.
-//
-// Sumanta Guha.
+// Creats a dirty dancefloor of wild imagination and endless possibility
 //////////////////////////////////////////////////////////////////////////////////////
 
 #include <cmath>
@@ -45,13 +38,15 @@ static long font = (long)GLUT_BITMAP_8_BY_13; // Font selection.
 static float global_fog_density = .09;
 static bool fogUp = true;
 
-static float colors[] = { 0.800, 0.800, 0.800,
-                        1.000, 0.800, 0.000,
-		        0.000, 1.000, 0.000,
-		        0.667, 0.000, 0.471,
-			0.419, 0.792, 0.886,
-			0.667, 0.949, 0.000,
-			1.000, 0.000, 0.000 };
+static float colors[] = {
+0.800, 0.800, 0.800,
+1.000, 0.800, 0.000,
+0.000, 1.000, 0.000,
+0.667, 0.000, 0.471,
+0.419, 0.792, 0.886,
+0.667, 0.949, 0.000,
+1.000, 0.000, 0.000 
+};
 
 // Routine to draw a bitmap character string.
 void writeBitmapString(void *font, char *string)
@@ -241,7 +236,8 @@ void drawScene()
 	glColor3f(1.0, 1.0, 1.0);
 	floatToString(theStringBuffer, 4, spotExponent);
 	glRasterPos3f(-1.0, 1.0, -2.0);
-	writeBitmapString((void*)font, "Spotlight attenuation: ");  
+	char theUpperMessage[] = "Dance Untill the World Ends";
+	writeBitmapString((void*)font, theUpperMessage);  
 	writeBitmapString((void*)font, theStringBuffer);
 	glEnable(GL_LIGHTING);
 
@@ -357,13 +353,13 @@ void drawScene()
 	glutSolidSphere(0.75,20,20);
 	glPopMatrix();
 
-        glPushMatrix();
+    glPushMatrix();
 	glColor3f(0.5, 0.35, .05);
 	glTranslatef(0.,0.,-35);
 	glutSolidCube(50);
 	glPopMatrix();
 
-        float fogColor[4] = {redIntensity, greenIntensity, blueIntensity,1};
+    float fogColor[4] = {redIntensity, greenIntensity, blueIntensity,1};
 
 	glFogfv (GL_FOG_COLOR, fogColor); //set the fog color to our color chosen above
 	glFogf (GL_FOG_DENSITY, global_fog_density); //set the density to the value above
@@ -395,7 +391,7 @@ void keyInput(unsigned char key, int x, int y)
          glutPostRedisplay();
 		 break;
 	  case 'a':
-	         isAnimate = !isAnimate;
+	     isAnimate = !isAnimate;
 		 glutPostRedisplay();
 		 break;
 	  case 'T':
@@ -410,6 +406,7 @@ void keyInput(unsigned char key, int x, int y)
 // Callback routine for non-ASCII key entry.
 void specialKeyInput(int key, int x, int y)
 {
+   //These don't do anything, but should some day
    if (key == GLUT_KEY_PAGE_DOWN)
    {
       if (spotAngle > 0.0) spotAngle -= 1.0;
@@ -437,13 +434,32 @@ void specialKeyInput(int key, int x, int y)
    glutPostRedisplay();
 }
 
+void rightMenu(int id)
+{
+   if (id==0) exit(0);
+}
+
+// Function to create menu.
+void makeMenu(void)
+{
+/*
+   int sub_menu;
+   sub_menu = glutCreateMenu(grid_menu);
+   glutAddMenuEntry("On", 3);
+   glutAddMenuEntry("Off",4);
+   glutAddSubMenu("Grid", sub_menu);
+*/   
+
+   glutCreateMenu(rightMenu);
+   glutAddMenuEntry("Quit",0);
+   glutAttachMenu(GLUT_RIGHT_BUTTON);
+}
+
 // Routine to output interaction instructions to the C++ window.
 void printInteraction(void)
 {
    cout << "Interaction:" << endl;
-   cout << "Press the page up/down arrow keys to increase/decrease the spotlight cone angle." << endl
-	    << "Press the arrow keys to move the spotlight." << endl
-		<< "Press 't/T' to decrease/increase the spotlight's attenuation." << endl;
+   cout << "No interactions!" << endl;
 }
 
 // Main routine.
@@ -455,12 +471,17 @@ int main(int argc, char **argv)
    glutInitWindowSize (500, 500);
    glutInitWindowPosition (100, 100);
    glutCreateWindow ("spotlight.cpp");
+   
    setup();
+   
    glutDisplayFunc(drawScene);
    glutReshapeFunc(resize);
    glutKeyboardFunc(keyInput);
    glutSpecialFunc(specialKeyInput);
+   
    glutTimerFunc(5, animate, 1);
+   makeMenu();
+   
    glutMainLoop();
    
    return 0;
