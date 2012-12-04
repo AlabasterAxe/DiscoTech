@@ -113,7 +113,12 @@ void rungame(int value)
 		//Resets the game when it is over
 		if(game_num_round >= game_num_total)
 		{
-			cout<<"Percent Correct: "<<100.0*(double)game_num_correct/(double)game_num_total<<endl;
+                        double percentCorrect = 100.0*(double)game_num_correct/(double)game_num_total;
+			cout<<"Percent Correct: "<< percentCorrect <<endl;
+                        if (percentCorrect >= 80 && game_guess_time > 150)
+                        {
+                            game_guess_time -= 100;
+	        	}
 			resetGame();
 		}
 	}
