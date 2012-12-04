@@ -17,26 +17,39 @@
 using namespace std;
 
 // Globals.
+static bool fogUp = true;
+static bool isAnimate = 0;
+
 static float spotAngle = 25.0; // Spotlight cone half-angle.
 static float xMove = 0.0, zMove = 0.0; // Movement components.
 static float spotExponent = 10.0; // Spotlight exponent = attenuation.
-static float redIntensity = 0.3; // Spotlight exponent = attenuation.
-static int redUp = 1; // Spotlight exponent = attenuation.
-static float greenIntensity = 0.65; // Spotlight exponent = attenuation.
-static int greenUp = 1; // Spotlight exponent = attenuation.
-static float blueIntensity = 1.0; // Spotlight exponent = attenuation.
-static int blueUp = 0; // Spotlight exponent = attenuation.
+
+static int redUp = 1;
+static int greenUp = 1;
+static int blueUp = 0;
+static float redIntensity = 0.3;
+static float greenIntensity = 0.65;
+static float blueIntensity = 1.0; 
 static float intensityStep = 0.05; // Spotlight exponent = attenuation.
-static int isAnimate = 0; // Spotlight exponent = attenuation.
+
 static int aniTime = 20; // Spotlight exponent = attenuation.
 static float discoBallRotation = 0.0; // Spotlight exponent = attenuation.
 static float spotLightParameter = 0.0; // Spotlight exponent = attenuation.
 static float upperBound = 1.0; // Spotlight exponent = attenuation.
 static float lowerBound = 0.3; // Spotlight exponent = attenuation.
-static char theStringBuffer[10]; // String buffer.
-static long font = (long)GLUT_BITMAP_8_BY_13; // Font selection.
 static float global_fog_density = .09;
-static bool fogUp = true;
+
+static long font = (long)GLUT_BITMAP_8_BY_13; // Font selection.
+static char theStringBuffer[10]; // String buffer.
+
+//Game Booleans
+static int game_guess_time = 1000;
+static int game_current_ans = -1;
+static int game_user_ans = -1;
+static int game_num_correct = 0;
+static int game_num_total = 10;
+static int game_num_round = 0;
+static bool game_on = false;
 
 static float colors[] = {
 0.800, 0.800, 0.800,
@@ -54,6 +67,54 @@ void writeBitmapString(void *font, char *string)
    char *c;
 
    for (c = string; *c != '\0'; c++) glutBitmapCharacter(font, *c);
+}
+
+void resetGame()
+{
+	game_current_ans = -1;
+	game_user_ans = -1;
+	game_num_correct = 0;
+	game_num_round = 0;
+	game_on = false;
+}
+
+void rungame(int value)
+{
+	//Starts first round of game by generating random answer and clearing user answer
+	if(game_current_ans == -1)
+	{
+		game_current_ans = rand()%3;
+		game_user_ans = -1;
+	}
+	else if(game_on)
+	{		
+		//When this called, the guessing period is up so we see if the user 
+		//guessed it correctly
+		if(game_current_ans == game_user_ans)
+		{
+			game_num_correct +=1;
+			cout<<"Correct"<<endl;
+		}
+		else
+		{
+			cout<<"FUCKING WRONG, KID"<<endl;
+		}
+		//Randomly picks a new number to guess
+		game_current_ans = rand()%3;
+		game_user_ans = -1;
+		cout<<(game_current_ans+1)<<endl;
+		game_num_round += 1;
+		if(game_num_round >= game_num_total)
+		{
+			cout<<"Percent Correct: "<<(double)game_num_correct/(double)game_num_total<<endl;
+			resetGame();
+		}
+	}
+	else
+		true;
+	
+	glutTimerFunc(game_guess_time,rungame,1);
+	glutPostRedisplay();
 }
 
 void animate(int value)
@@ -406,6 +467,15 @@ void keyInput(unsigned char key, int x, int y)
  		 spotExponent += 0.1;
          glutPostRedisplay();
 		 break;
+      case '1':
+         game_user_ans = 0;
+         break;
+      case '2':
+      	 game_user_ans = 1;
+      	 break;
+      case '3':
+      	 game_user_ans = 2;
+      	 break; 
       default:
          break;
    }
@@ -446,6 +516,7 @@ void rightMenu(int id)
 {
    if (id==0) exit(0);
    if (id==1) isAnimate = !isAnimate;
+   if (id==2) game_on = !game_on;
 }
 
 // Function to create menu.
@@ -461,6 +532,7 @@ void makeMenu(void)
 
    glutCreateMenu(rightMenu);
    glutAddMenuEntry("Toggle Animation",1);
+   glutAddMenuEntry("Start Game",2);
    glutAddMenuEntry("Quit",0);
    glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -491,6 +563,7 @@ int main(int argc, char **argv)
    glutSpecialFunc(specialKeyInput);
    
    glutTimerFunc(5, animate, 1);
+   glutTimerFunc(5,rungame,1);
    makeMenu();
    
    glutMainLoop();
