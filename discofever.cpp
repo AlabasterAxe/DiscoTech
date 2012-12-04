@@ -43,7 +43,7 @@ static long font = (long)GLUT_BITMAP_8_BY_13; // Font selection.
 static char theStringBuffer[10]; // String buffer.
 
 //Game Booleans
-static int game_guess_time = 1000;
+static int game_guess_time = 750;
 static int game_current_ans = -1;
 static int game_user_ans = -1;
 static int game_num_correct = 0;
@@ -81,7 +81,7 @@ void resetGame()
 void rungame(int value)
 {
 	//Starts first round of game by generating random answer and clearing user answer
-	if(game_current_ans == -1)
+	if(game_current_ans == -1 and game_on)
 	{
 		game_current_ans = rand()%3;
 		game_user_ans = -1;
@@ -99,14 +99,21 @@ void rungame(int value)
 		{
 			cout<<"FUCKING WRONG, KID"<<endl;
 		}
-		//Randomly picks a new number to guess
-		game_current_ans = rand()%3;
+		//Randomly picks a new number to guess that is different from
+		//the last random number
+		int new_ans = rand()%3;
+		while(new_ans == game_current_ans)
+			new_ans = rand()%3;
+		game_current_ans = new_ans;
+		
 		game_user_ans = -1;
 		cout<<(game_current_ans+1)<<endl;
 		game_num_round += 1;
+		
+		//Resets the game when it is over
 		if(game_num_round >= game_num_total)
 		{
-			cout<<"Percent Correct: "<<(double)game_num_correct/(double)game_num_total<<endl;
+			cout<<"Percent Correct: "<<100.0*(double)game_num_correct/(double)game_num_total<<endl;
 			resetGame();
 		}
 	}
@@ -323,6 +330,32 @@ void drawDiscoStick()
 	glPopMatrix();
 }
 
+void draw3GameBalls()
+{
+	glShadeModel(GL_SMOOTH);
+	glPushMatrix();
+	if(game_current_ans == 2)
+		glColor3f(1.0, 1.0, 1.0); 
+	else
+		glColor3f(0.0, 0.0, 0.0);
+	glTranslatef(1.25,1.,-2.0);
+	glutSolidSphere(0.5,20,20);
+	if(game_current_ans == 1)
+		glColor3f(1.0, 1.0, 1.0); 
+	else
+		glColor3f(0.0, 0.0, 0.0);
+	glTranslatef(-1.25,0.,0.0);
+	glutSolidSphere(0.5,20,20);
+	if(game_current_ans == 0)
+		glColor3f(1.0, 1.0, 1.0); 
+	else
+		glColor3f(0.0, 0.0, 0.0);
+	glTranslatef(-1.25,0.,0.0);
+	glutSolidSphere(0.5,20,20);
+	
+	glPopMatrix();
+}
+
 void writeMessageToScreen()
 {
 	glDisable(GL_LIGHTING);
@@ -420,6 +453,9 @@ void drawScene()
 
 	//Draws the Discoball's pole
 	drawDiscoStick();
+	
+	//Draws 3 game balls
+	draw3GameBalls();
 	
     //Draws Back Wall
     glPushMatrix();
