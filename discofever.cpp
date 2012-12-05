@@ -26,9 +26,9 @@ static float xMove = 0.0, zMove = 0.0; // Movement components.
 static float xRot = 0.0, yRot = 180.0; // Rotation components.
 static float spotExponent = 10.0; // Spotlight exponent = attenuation.
 
-static int redUp = 1;
-static int greenUp = 1;
-static int blueUp = 0;
+static bool redUp = 1;
+static bool greenUp = 1;
+static bool blueUp = 0;
 static float redIntensity = 0.3;
 static float greenIntensity = 0.65;
 static float blueIntensity = 1.0; 
@@ -43,6 +43,12 @@ static float global_fog_density = .09;
 
 static long font = (long)GLUT_BITMAP_8_BY_13; // Font selection.
 static char theStringBuffer[10]; // String buffer.
+
+// Dance/Texture globals
+static GLuint textureIds[5];
+static float dance_frame = 1.0;
+static bool  dance_up = true;
+static float dance_step = .3;
 
 //Game Booleans
 static int game_guess_time = 750;
@@ -269,6 +275,7 @@ void rungame(int value)
                             game_level += 1;
                             char pngFile[9];
                             sprintf(pngFile,"lvl%d.png",game_level);
+                            glBindTexture(GL_TEXTURE_2D,textureIds[0]);
                             loadTextureFromPng(pngFile);
 	        	}
 			resetGame();
@@ -279,6 +286,27 @@ void rungame(int value)
 	
 	glutTimerFunc(max(game_guess_time-(game_level-1)*100,150),rungame,1);
 	glutPostRedisplay();
+}
+
+float advanceAnimationParameter(float max, 
+                                float min, 
+        			bool & up, 
+			        float value, 
+			        float step)
+{
+     if (value <= min) { 
+	 up = 1;
+	 value = min;
+     }
+     if (value >= max) {
+	 up = 0;
+	 value = max;
+     }
+     if (up)
+	 value += step; 
+     else 
+	 value -= step;
+     return value;
 }
 
 void animate(int value)
@@ -295,50 +323,34 @@ void animate(int value)
 	    	fogUp = true;
 	    
 	    discoBallRotation += .1;
+            dance_frame = advanceAnimationParameter(4.9,
+                                                    1.1,
+                                                    dance_up,
+                                                    dance_frame,
+                                                    dance_step);
 	    spotLightParameter += .05;
 	    if (discoBallRotation >= 361)
 		discoBallRotation = 0;
 	    if (spotLightParameter >= 361)
 		spotLightParameter = 0;
 
-	     if (redIntensity <= lowerBound) { 
-		 redUp = 1;
-		 redIntensity = lowerBound;
-	     }
-	     if (redIntensity >= upperBound) {
-		 redUp = 0;
-		 redIntensity = upperBound;
-	     }
-	     if (redUp)
-		 redIntensity += intensityStep; 
-	     else 
-		 redIntensity -= intensityStep; 
+             redIntensity = advanceAnimationParameter(upperBound,
+                                                      lowerBound,
+                                                      redUp,
+                                                      redIntensity,
+                                                      intensityStep);
 
-	     if (greenIntensity <= lowerBound) { 
-		 greenUp = 1;
-		 greenIntensity = lowerBound;
-	     }
-	     if (greenIntensity >= upperBound) {
-		 greenUp = 0;
-		 greenIntensity = upperBound;
-	     }
-	     if (greenUp)
-		 greenIntensity += intensityStep; 
-	     else 
-		 greenIntensity -= intensityStep; 
+             greenIntensity = advanceAnimationParameter(upperBound,
+                                                        lowerBound,
+                                                        greenUp,
+                                                        greenIntensity,
+                                                        intensityStep);
 
-	     if (blueIntensity <= lowerBound) { 
-		 blueUp = 1;
-		 blueIntensity = lowerBound;
-	     }
-	     if (blueIntensity >= upperBound) {
-		 blueUp = 0;
-		 blueIntensity = upperBound;
-	     }
-	     if (blueUp)
-		 blueIntensity += intensityStep; 
-	     else 
-		 blueIntensity -= intensityStep; 
+             blueIntensity = advanceAnimationParameter(upperBound,
+                                                       lowerBound,
+                                                       blueUp,
+                                                       blueIntensity,
+                                                       intensityStep);
 	}
 
 	glutTimerFunc(aniTime,animate,1);
@@ -363,8 +375,18 @@ void setup(void)
 
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        glGenTextures(5,textureIds);
+
+        glBindTexture(GL_TEXTURE_2D, textureIds[0]);
         char pngFile[] = "lvl1.png";
         loadTextureFromPng(pngFile);
+
+        for (int i = 0; i < 4; ++i)
+        {
+            glBindTexture(GL_TEXTURE_2D, textureIds[i+1]);
+            sprintf(pngFile, "james%d.png", i);
+            loadTextureFromPng(pngFile);
+        }
 
 	// Turn on OpenGL lighting.
 	glEnable(GL_LIGHTING);
@@ -525,10 +547,38 @@ void drawLevelScreen()
 {
         glPushMatrix();
 	glTranslatef(1.0, 2.5, -3.6);
+	glRotatef(180, 0,1,0);
+
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glBindTexture(GL_TEXTURE_2D, textureIds[0]);
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(-2.0, -1.0, 0.0);
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(-2.0, 1.0, 0.0);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(0.0, 1.0, 0.0);
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(0.0, -1.0, 0.0);
+
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+        glPopMatrix();
+}
+
+void drawDance()
+{
+        glPushMatrix();
+	glTranslatef(-4, 2.5, -3.6);
+	glScalef(2, 1.5, 2);
 	glRotatef(yRot, 0,1,0);
 	glRotatef(xRot, 1,0,0);
 
         //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        if (dance_frame < 1) dance_frame = 1.0;
+        if (dance_frame > 4.9) dance_frame = 4.9;
+        glBindTexture(GL_TEXTURE_2D, textureIds[int(dance_frame)]);
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);
 	glTexCoord2f(1.0, 0.0);
@@ -551,7 +601,7 @@ void writeMessageToScreen()
 	glColor3f(1.0, 1.0, 1.0);
 	floatToString(theStringBuffer, 4, spotExponent);
 	glRasterPos3f(-1.0, 1.0, -2.0);
-	char theUpperMessage[] = "Dance Untill the World Ends, Bitch!";
+	char theUpperMessage[] = "Dance Until the World Ends!";// Bitch!";
 	writeBitmapString((void*)font, theUpperMessage);  
 	//writeBitmapString((void*)font, theStringBuffer);
 	glEnable(GL_LIGHTING);
@@ -645,6 +695,7 @@ void drawScene()
 	
 	//Draws 3 game balls
 	draw3GameBalls();
+
 	
     //Draws Back Wall
     glPushMatrix();
@@ -658,8 +709,11 @@ void drawScene()
 	glFogfv (GL_FOG_COLOR, fogColor); //set the fog color to our color chosen above
 	glFogf (GL_FOG_DENSITY, global_fog_density); //set the density to the value above
 
-        //Draw the quad
+        //Draw the quad that holds the current level.
         drawLevelScreen();
+
+        // Draw James
+        drawDance();
 
 	glutSwapBuffers();
 }
